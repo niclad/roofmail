@@ -2,7 +2,7 @@
 
 ## Helpful links
 ### Weather API
-The Government (currently) provides an API that's free to use. [Info here.](https://www.weather.gov/documentation/services-web-api). Using this, it's possible to get forcast and weather data based on geographic coordinates. However, the resolution of this data is as accurate as a 2.5km x 2.5km area (which is good enough for our use case here).
+The Government (currently) provides an API that's free to use. [Info here.](https://www.weather.gov/documentation/services-web-api). Using this, it's possible to get forcast and weather data based on geographic coordinates. However, the resolution of this data is only precise down to an area of 2.5km x 2.5km — which is good enough for our use case here.
 
 ### Beaufort Scale
 The Beaufort Scale is a handy way to determine how unpleasant wind can be. The NWS has a helpful table [here](https://www.weather.gov/pqr/wind), but I'll provide it below as well.
