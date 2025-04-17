@@ -1,5 +1,11 @@
 # Roofmail — An SMS companion dedicated to helping you find the perfect relaxation time
 
+This is an automated tool to help notify if the weather at your location is nice enough to sit outside... meaning you can chill, drink a cold drink, listen to some music, and read a book, without feeling like you're going to freeze or cook.
+
+## Running this code
+
+*TBD*
+
 ## Helpful links
 ### Weather API
 The Government (currently) provides an API that's free to use. [Info here.](https://www.weather.gov/documentation/services-web-api). Using this, it's possible to get forcast and weather data based on geographic coordinates. However, the resolution of this data is only precise down to an area of 2.5km x 2.5km — which is good enough for our use case here.
