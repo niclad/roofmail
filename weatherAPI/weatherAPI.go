@@ -61,40 +61,30 @@ type WindSpeed struct {
 	MinValue *float64 `json:"minValue,omitempty"`
 }
 
+type UnitValue struct {
+	UnitCode string  `json:"unitCode"`
+	Value    float64 `json:"value"`
+}
+
 // Period represents a forecast period, compatible with both daily and hourly responses
 type Period struct {
-	Number      int       `json:"number"`
-	Name        string    `json:"name"`
-	StartTime   time.Time `json:"startTime"`
-	EndTime     time.Time `json:"endTime"`
-	IsDaytime   bool      `json:"isDaytime"`
-	Temperature *struct {
-		UnitCode string  `json:"unitCode"`
-		Value    float64 `json:"value"`
-	} `json:"temperature,omitempty"`
-	TemperatureUnit            string `json:"temperatureUnit,omitempty"` // Optional for daily
-	TemperatureTrend           string `json:"temperatureTrend,omitempty"`
-	ProbabilityOfPrecipitation *struct {
-		UnitCode string  `json:"unitCode"`
-		Value    float64 `json:"value,omitempty"`
-	} `json:"probabilityOfPrecipitation,omitempty"`
-	Dewpoint *struct {
-		UnitCode string  `json:"unitCode"`
-		Value    float64 `json:"value"`
-	} `json:"dewpoint,omitempty"`
-	RelativeHumidity *struct {
-		UnitCode string  `json:"unitCode"`
-		Value    float64 `json:"value"`
-	} `json:"relativeHumidity,omitempty"`
-	WindSpeed *WindSpeed `json:"windSpeed,omitempty"`
-	WindGust  *struct {
-		UnitCode string  `json:"unitCode"`
-		Value    float64 `json:"value"`
-	} `json:"windGust,omitempty"`
-	WindDirection    string `json:"windDirection"`
-	Icon             string `json:"icon"`
-	ShortForecast    string `json:"shortForecast"`
-	DetailedForecast string `json:"detailedForecast"`
+	Number                     int        `json:"number"`
+	Name                       string     `json:"name"`
+	StartTime                  time.Time  `json:"startTime"`
+	EndTime                    time.Time  `json:"endTime"`
+	IsDaytime                  bool       `json:"isDaytime"`
+	Temperature                *UnitValue `json:"temperature,omitempty"`
+	TemperatureUnit            string     `json:"temperatureUnit,omitempty"` // Optional for daily
+	TemperatureTrend           string     `json:"temperatureTrend,omitempty"`
+	ProbabilityOfPrecipitation *UnitValue `json:"probabilityOfPrecipitation,omitempty"`
+	Dewpoint                   *UnitValue `json:"dewpoint,omitempty"`
+	RelativeHumidity           *UnitValue `json:"relativeHumidity,omitempty"`
+	WindSpeed                  *WindSpeed `json:"windSpeed,omitempty"`
+	WindGust                   *UnitValue `json:"windGust,omitempty"`
+	WindDirection              string     `json:"windDirection"`
+	Icon                       string     `json:"icon"`
+	ShortForecast              string     `json:"shortForecast"`
+	DetailedForecast           string     `json:"detailedForecast"`
 }
 
 // WeatherAPI defines the interface for interacting with the weather.gov API.
