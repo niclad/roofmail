@@ -86,9 +86,7 @@ func main() {
 		return
 	}
 
-	formattedForecast := fmt.Sprintf("DailyForecast: %+v", forecast)
-
-	debugLogger.Println(formattedForecast)
+	fmt.Println(comfortMessage(forecast.Periods[0]))
 }
 
 // Initialize Logger
@@ -99,10 +97,18 @@ func initLogs() {
 		log.Fatalln("Failed to open log file:", err)
 	}
 
-	infoLogger = log.New(logFile, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
-	debugLogger = log.New(logFile, "DEBUG: ", log.Ldate|log.Ltime|log.Lshortfile)
+	var secondWriter *os.File = nil
+	if os.Getenv("APP_ENV") == "development" {
+		secondWriter = os.Stdout
+	}
 
-	if os.Getenv("APP_ENV") != "debug" {
+	multiInfo := io.MultiWriter(logFile, secondWriter)
+	multiDebug := io.MultiWriter(logFile, secondWriter)
+
+	infoLogger = log.New(multiInfo, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	debugLogger = log.New(multiDebug, "DEBUG: ", log.Ldate|log.Ltime|log.Lshortfile)
+
+	if os.Getenv("APP_ENV") != "development" {
 		debugLogger.SetOutput(io.Discard)
 	}
 }
@@ -111,5 +117,90 @@ func initLogs() {
 func loadConfig() Config {
 	return Config{
 		Version: "0.0.0",
+	}
+}
+
+// Get the current temperature in Fahreneheit
+func getTempF(period wapi.Period) float64 {
+	tempF := period.Temperature.Value
+
+	if period.Temperature.UnitCode == "wmoUnit:degC" {
+		tempF = ctof(period.Temperature.Value)
+	}
+
+	return tempF
+}
+
+// Get the current Beaufort value
+func getBeaufort(period wapi.Period) int {
+
+	return beaufortScale(*period.WindSpeed)
+}
+
+// Convert Celsius to Fahrenheit
+func ctof(c float64) float64 {
+	return (9 * c / 5) + 32
+}
+
+// Convert KPH to MPH
+func kphToMph(kph float64) float64 {
+	return kph / 1.609344
+}
+
+// Determine arbitrary "comfort" value
+// Returns an `int`, where 0 is most comfortable and 10 is least comfortable.
+// Note: This will probably have to be tuned
+func isComfortable(period wapi.Period) bool {
+	beaufort := getBeaufort(period)
+	temperature := getTempF(period)
+
+	var minTempF = 70.0
+
+	return (temperature >= minTempF && beaufort < 4)
+}
+
+func comfortMessage(period wapi.Period) string {
+	isComfy := isComfortable(period)
+	temp := getTempF(period)
+	beau := getBeaufort(period)
+
+	notStr := " not "
+
+	if isComfy {
+		notStr = " "
+	}
+
+	return fmt.Sprintf("It looks like the weather will%sbe comfortable. The temperature is %.0f\u00B0F with a wind-level of %d.", notStr, temp, beau)
+}
+
+// Determine Beaufort value
+func beaufortScale(windSpeed wapi.WindSpeed) int {
+	var wind float64
+	if windSpeed.Value != nil {
+		wind = *windSpeed.Value
+	} else if windSpeed.MaxValue != nil {
+		wind = *windSpeed.MaxValue
+	} else {
+		return 0 // assuming no value means no wind
+	}
+
+	// convert to mph if kph
+	if windSpeed.UnitCode == "wmoUnits:km_h-1" {
+		wind = kphToMph(wind)
+	}
+
+	switch {
+	case wind < 1.0:
+		return 0
+	case wind < 4.0:
+		return 1
+	case wind < 8.0:
+		return 2
+	case wind < 13:
+		return 3
+	case wind < 19:
+		return 4
+	default:
+		return 5
 	}
 }

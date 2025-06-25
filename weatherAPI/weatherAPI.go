@@ -48,6 +48,13 @@ type DailyForecast struct {
 	Periods []Period `json:"periods"`
 }
 
+type WindSpeed struct {
+	UnitCode string   `json:"unitCode"`
+	Value    *float64 `json:"value,omitempty"`
+	MaxValue *float64 `json:"maxValue,omitempty"`
+	MinValue *float64 `json:"minValue,omitempty"`
+}
+
 // Period represents a forecast period, compatible with both daily and hourly responses
 type Period struct {
 	Number      int       `json:"number"`
@@ -73,13 +80,8 @@ type Period struct {
 		UnitCode string  `json:"unitCode"`
 		Value    float64 `json:"value"`
 	} `json:"relativeHumidity,omitempty"`
-	WindSpeed *struct {
-		UnitCode string  `json:"unitCode"`
-		Value    float64 `json:"value,omitempty"`
-		MaxValue float64 `json:"maxValue,omitempty"`
-		MinValue float64 `json:"minValue,omitempty"`
-	} `json:"windSpeed,omitempty"`
-	WindGust *struct {
+	WindSpeed *WindSpeed `json:"windSpeed,omitempty"`
+	WindGust  *struct {
 		UnitCode string  `json:"unitCode"`
 		Value    float64 `json:"value"`
 	} `json:"windGust,omitempty"`
