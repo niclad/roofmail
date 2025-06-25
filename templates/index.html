@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="h-100" lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -9,14 +9,43 @@
     <link rel="stylesheet" href="/static/css/styles.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 </head>
 
-<body>
-    <h1>{{ .Heading }}</h1>
-    <p>{{ .Message }}</p>
+<body class="d-felx h-100 text-center">
+    <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
+        <header class="mb-auto">
+            <div>
+                <h3 class="float-md-center">Roofmail 📬</h3>
+            </div>
+        </header>
+        <main class="px-3">
+            <h1>{{ .Heading }}</h1>
+            <p class="lead">{{ .Message }}</p>
+            <div class="btn-group btn-group-lg" role="group" aria-label="Large button group">
+                <button id="like-btn" type="button" class="btn btn-primary"><i id="like-icon"
+                        class="bi bi-hand-thumbs-up"></i></button>
+                <button id="dislike-btn" type="button" class="btn btn-primary"><i id="dislike-icon"
+                        class="bi bi-hand-thumbs-down"></i></button>
+            </div>
+        </main>
+        <footer class="mt-auto">
+            <div class="row justify-content-center">
+                <div class="col-auto">
+                    <p class="text-warning text-opacity-100 mb-0">Powered by <i>Sunshine</i></p>
+                </div>
+                <div class="col-auto">
+                    <p class="text-black-50 mb-0 fw-light">Last refresh at <i>{{ .RefreshDate }}</i></p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q"
         crossorigin="anonymous"></script>
+    <script src="/static/js/script.js"></script>
 </body>
 
 </html>

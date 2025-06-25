@@ -13,6 +13,7 @@ import (
 
 	wapi "roofmail/weatherAPI"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
@@ -80,23 +81,43 @@ func main() {
 		return
 	}
 
-	// get the daily forecast
-	forecast, err := w.GetDailyForecast(ctx)
-	if err != nil {
-		infoLogger.Panicln("Error getting daily forecast:", err)
-		return
-	}
+	router := gin.Default()
+	router.GET("/", func(c *gin.Context) {
+		t, err := template.ParseFiles("templates/index.html")
+		if err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+			return
+		}
 
-	fmt.Println(comfortMessage(forecast.Periods[0]))
+		// You may want to fetch the forecast again here, or pass it from main
+		forecast, err := w.GetDailyForecast(ctx)
+		if err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+			return
+		}
 
-	http.HandleFunc("/", handler)
-	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "static/favicon.ico")
+		utcTime := time.Now().UTC()
+		utcString := utcTime.Format(time.RFC3339)
+
+		data := PageData{
+			Title:       "Roofmail",
+			Heading:     "<ROOF STATUS HERE>",
+			Message:     comfortMessage(forecast.Periods[0]),
+			RefreshDate: utcString,
+		}
+
+		c.Status(http.StatusOK)
+		t.Execute(c.Writer, data)
 	})
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	router.GET("/like", getUserLike)
+	router.POST("/like", postUserLike)
+	router.Static("/static", "./static")
+	router.GET("/favicon.ico", func(c *gin.Context) {
+		c.File("static/favicon.ico")
+	})
 
 	debugLogger.Println("Server running at http://localhost:8080/")
-	err = http.ListenAndServe(":8080", nil)
+	err = router.Run("localhost:8080")
 	if err != nil {
 		infoLogger.Fatal(err)
 	}
@@ -227,26 +248,33 @@ func beaufortScale(windSpeed wapi.WindSpeed) int {
 }
 
 type PageData struct {
-	Title   string
-	Heading string
-	Message string
+	Title       string
+	Heading     string
+	Message     string
+	RefreshDate string
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles("templates/index.html")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+func getUserLike(c *gin.Context) {
+	// todo:
+	// read from database for user likes/dislike
+
+	liked := false
+	if time.Now().Unix()%2 == 0 {
+		liked = true
+	}
+
+	c.JSON(http.StatusOK, struct{ Liked bool }{Liked: liked})
+}
+
+func postUserLike(c *gin.Context) {
+	var newLike struct{ Liked bool }
+
+	if err := c.BindJSON(&newLike); err != nil {
+		infoLogger.Println("Error binding JSON (postUserLike()):", err)
 		return
 	}
 
-	data := PageData{
-		Title:   "Roofmail",
-		Heading: "<ROOF STATUS HERE>",
-		Message: "<COMFORT MESSAGE>",
-	}
-
-	err = t.Execute(w, data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	// write to database (not implemented)
+	fmt.Println("Liked?", newLike.Liked)
+	c.Status(http.StatusOK)
 }
