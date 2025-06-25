@@ -35,6 +35,10 @@ type DailyForecastResponse struct {
 	Properties DailyForecast `json:"properties"`
 }
 
+type hourlyForecastResponse struct {
+	Properties HourlyForecast `json:"properties"`
+}
+
 type DailyForecast struct {
 	Units             string    `json:"units"`
 	ForecastGenerator string    `json:"forecastGenerator"`
@@ -47,6 +51,8 @@ type DailyForecast struct {
 	} `json:"elevation"`
 	Periods []Period `json:"periods"`
 }
+
+type HourlyForecast DailyForecast
 
 type WindSpeed struct {
 	UnitCode string   `json:"unitCode"`
@@ -89,9 +95,6 @@ type Period struct {
 	Icon             string `json:"icon"`
 	ShortForecast    string `json:"shortForecast"`
 	DetailedForecast string `json:"detailedForecast"`
-}
-
-type HourlyForecast struct {
 }
 
 // WeatherAPI defines the interface for interacting with the weather.gov API.
@@ -296,6 +299,63 @@ func (api *weatherGovAPI) GetDailyForecast(ctx context.Context, opts ...GetForca
 	}
 
 	return dailyForecastResponse.Properties, nil
+}
+
+func (api *weatherGovAPI) GetHourlyForecast(ctx context.Context, opts ...GetForcastOption) (HourlyForecast, error) {
+	// set default options
+	options := &GetForecastOptions{
+		Units:          US,
+		UseQuantValues: true,
+	}
+
+	// Apply provided options
+	for _, opt := range opts {
+		opt(options)
+	}
+
+	// parse base URL
+	u, err := url.Parse(api.forecastProperties.ForecastHourly)
+	if err != nil {
+		return HourlyForecast{}, err
+	}
+
+	// create quert string
+	params := url.Values{}
+	params.Add("units", options.Units.String())
+
+	// add query to URL
+	u.RawQuery = params.Encode()
+
+	url := u.String()
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return HourlyForecast{}, nil
+	}
+
+	// set quant header
+	if options.UseQuantValues {
+		request.Header.Set("Feature-Flags", "forecast_temperature_qv,forecast_wind_speed_qv")
+	}
+
+	response, err := api.client.Do(request)
+	if err != nil {
+		return HourlyForecast{}, err
+	}
+
+	defer response.Body.Close()
+
+	// make sure the response is good
+	if response.StatusCode != http.StatusOK {
+		return HourlyForecast{}, httpStatusError(response.StatusCode)
+	}
+
+	var hourlyForecastResponse hourlyForecastResponse
+	err = readBody(response.Body, &hourlyForecastResponse)
+	if err != nil {
+		return HourlyForecast{}, err
+	}
+
+	return hourlyForecastResponse.Properties, nil
 }
 
 // create an HTTP status error
