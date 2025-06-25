@@ -147,6 +147,11 @@ func kphToMph(kph float64) float64 {
 	return kph / 1.609344
 }
 
+// Convert meters/s to miles/h
+func mpsToMph(mps float64) float64 {
+	return mps * 2.237
+}
+
 // Determine arbitrary "comfort" value
 // Returns an `int`, where 0 is most comfortable and 10 is least comfortable.
 // Note: This will probably have to be tuned
@@ -185,8 +190,11 @@ func beaufortScale(windSpeed wapi.WindSpeed) int {
 	}
 
 	// convert to mph if kph
-	if windSpeed.UnitCode == "wmoUnits:km_h-1" {
+	switch windSpeed.UnitCode {
+	case "wmoUnit:km_h-1":
 		wind = kphToMph(wind)
+	case "wmoUnit:m_s-1":
+		wind = mpsToMph(wind)
 	}
 
 	switch {
