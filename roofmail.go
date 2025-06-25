@@ -90,6 +90,11 @@ func main() {
 	fmt.Println(comfortMessage(forecast.Periods[0]))
 
 	http.HandleFunc("/", handler)
+	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/favicon.ico")
+	})
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+
 	debugLogger.Println("Server running at http://localhost:8080/")
 	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
