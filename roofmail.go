@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"html/template"
 	"io"
 	"log"
 	"net/http"
@@ -72,7 +73,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	// initialize the API
+	//initialize the API
 	err = w.InitForecastAPI(ctx, nil, nil)
 	if err != nil {
 		infoLogger.Panicln("Error initializing Weather API:", err)
@@ -87,6 +88,13 @@ func main() {
 	}
 
 	fmt.Println(comfortMessage(forecast.Periods[0]))
+
+	http.HandleFunc("/", handler)
+	debugLogger.Println("Server running at http://localhost:8080/")
+	err = http.ListenAndServe(":8080", nil)
+	if err != nil {
+		infoLogger.Fatal(err)
+	}
 }
 
 // Initialize Logger
@@ -210,5 +218,30 @@ func beaufortScale(windSpeed wapi.WindSpeed) int {
 		return 4
 	default:
 		return 5
+	}
+}
+
+type PageData struct {
+	Title   string
+	Heading string
+	Message string
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	t, err := template.ParseFiles("templates/index.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	data := PageData{
+		Title:   "Roofmail",
+		Heading: "<ROOF STATUS HERE>",
+		Message: "<COMFORT MESSAGE>",
+	}
+
+	err = t.Execute(w, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
