@@ -59,8 +59,15 @@ function toggleDislikeButton() {
 
 toggleDislikeButton();
 
+let liked = null;
+
 function submitLike(isLiked) {
-    console.debug("Submitting like status: " + isLiked);
+    if (liked === isLiked) {
+        return; // No change in like status, do nothing
+    }
+
+    liked = isLiked;
+
 
     fetch("/like", {
         method: "POST",
@@ -70,7 +77,7 @@ function submitLike(isLiked) {
         body: JSON.stringify({ Liked: isLiked })
     }).then(response => {
         if (response.ok) {
-            console.debug("Like status submitted successfully.");
+            // console.debug("Like status submitted successfully.");
         } else {
             console.error("Failed to submit like status.");
         }

@@ -36,7 +36,6 @@ var (
 
 // Weather API
 var w wapi.WeatherAPI
-var ctx context.Context
 
 func main() {
 	err := godotenv.Load()
@@ -80,35 +79,10 @@ func main() {
 		infoLogger.Panicln("Error initializing Weather API:", err)
 		return
 	}
+	ctx.Done()
 
 	router := gin.Default()
-	router.GET("/", func(c *gin.Context) {
-		t, err := template.ParseFiles("templates/index.html")
-		if err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		// You may want to fetch the forecast again here, or pass it from main
-		forecast, err := w.GetDailyForecast(ctx)
-		if err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		utcTime := time.Now().UTC()
-		utcString := utcTime.Format(time.RFC3339)
-
-		data := PageData{
-			Title:       "Roofmail",
-			Heading:     "<ROOF STATUS HERE>",
-			Message:     comfortMessage(forecast.Periods[0]),
-			RefreshDate: utcString,
-		}
-
-		c.Status(http.StatusOK)
-		t.Execute(c.Writer, data)
-	})
+	router.GET("/", indexHandler)
 	router.GET("/like", getUserLike)
 	router.POST("/like", postUserLike)
 	router.Static("/static", "./static")
@@ -192,16 +166,18 @@ func mpsToMph(mps float64) float64 {
 func isComfortable(period wapi.Period) bool {
 	beaufort := getBeaufort(period)
 	temperature := getTempF(period)
+	percip := getPercipProb(period)
 
-	var minTempF = 70.0
+	var minTempF = 75.0
 
-	return (temperature >= minTempF && beaufort < 4)
+	return (temperature >= minTempF && beaufort < 4 && percip < 5.0)
 }
 
 func comfortMessage(period wapi.Period) string {
 	isComfy := isComfortable(period)
 	temp := getTempF(period)
 	beau := getBeaufort(period)
+	percip := getPercipProb(period)
 
 	notStr := " not "
 
@@ -209,7 +185,30 @@ func comfortMessage(period wapi.Period) string {
 		notStr = " "
 	}
 
-	return fmt.Sprintf("It looks like the weather will%sbe comfortable. The temperature is %.0f\u00B0F with a wind-level of %d.", notStr, temp, beau)
+	var percipModifier string = " "
+
+	switch {
+	case percip >= 50.0:
+		percipModifier += "high "
+	case percip >= 10.0:
+		break
+	case percip > 0.0:
+		percipModifier += "slight "
+	}
+
+	var percipMessage string = " There's a" + percipModifier + "chance of rain."
+
+	if percip <= 0.00001 {
+		percipMessage = ""
+	}
+
+	return fmt.Sprintf(
+		"It looks like the weather will%sbe comfortable. The temperature is %.0f\u00B0F with a wind-level of %d.%s",
+		notStr,
+		temp,
+		beau,
+		percipMessage,
+	)
 }
 
 // Determine Beaufort value
@@ -247,11 +246,50 @@ func beaufortScale(windSpeed wapi.WindSpeed) int {
 	}
 }
 
+// Get the probability of percipitaion
+func getPercipProb(period wapi.Period) float64 {
+	return period.ProbabilityOfPrecipitation.Value
+}
+
 type PageData struct {
 	Title       string
 	Heading     string
 	Message     string
 	RefreshDate string
+}
+
+func indexHandler(c *gin.Context) {
+	t, err := template.ParseFiles("templates/index.html")
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	forecast, err := w.GetDailyForecast(ctx)
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utcTime := time.Now().UTC()
+	utcString := utcTime.Format(time.RFC3339)
+
+	data := PageData{
+		Title:       "Roofmail",
+		Heading:     shortForecast(forecast.Periods[0]),
+		Message:     comfortMessage(forecast.Periods[0]),
+		RefreshDate: utcString,
+	}
+
+	c.Status(http.StatusOK)
+	t.Execute(c.Writer, data)
+}
+
+func shortForecast(period wapi.Period) string {
+	return period.ShortForecast
 }
 
 func getUserLike(c *gin.Context) {

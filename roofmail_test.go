@@ -135,8 +135,9 @@ func TestIsComfortable(t *testing.T) {
 	defer restore()
 
 	period := wapi.Period{
-		Temperature: &wapi.UnitValue{Value: 22, UnitCode: "wmoUnit:degC"}, // 70F
-		WindSpeed:   &wapi.WindSpeed{Value: floatPtr(0.5), UnitCode: "wmoUnit:m_s-1"},
+		Temperature:                &wapi.UnitValue{Value: 30, UnitCode: "wmoUnit:degC"}, // 70F
+		WindSpeed:                  &wapi.WindSpeed{Value: floatPtr(0.5), UnitCode: "wmoUnit:m_s-1"},
+		ProbabilityOfPrecipitation: &wapi.UnitValue{Value: 0.0, UnitCode: "wmoUnit:percent"},
 	}
 
 	if !isComfortable(period) {
