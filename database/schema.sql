@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS preferences (
-    id SERIAL PRIMARY KEY,
+    id PRIMARY KEY AUTOINCREMENT,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     units TEXT NOT NULL CHECK (units IN ('us', 'si')) DEFAULT 'us',
     temperature_min REAL DEFAULT 23.9, -- Minimum temperature in Celsius (~75°F)
