@@ -28,7 +28,6 @@ func createPrefsTable(db *bun.DB) error {
 	_, err := db.NewCreateTable().
 		Model((*Preference)(nil)).
 		IfNotExists().
-		ColumnExpr("units TEXT NOT NULL CHECK (units IN ('us', 'si')) DEFAULT 'us'").
 		ForeignKey(`("user_id") REFERENCES "users" ("id") ON DELETE CASCADE`).
 		Exec(ctx)
 	if err != nil {

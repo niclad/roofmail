@@ -47,3 +47,13 @@ func (d *Database) CreateTables(ctx context.Context, models ...interface{}) erro
 
 	return nil
 }
+
+func (d *Database) Close() error {
+	if d.DB == nil {
+		return nil
+	}
+	if err := d.DB.Close(); err != nil {
+		return err
+	}
+	return nil
+}

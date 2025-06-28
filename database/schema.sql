@@ -2,11 +2,12 @@ CREATE TABLE IF NOT EXISTS users (
     id PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
+    create_time INT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_login INT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 );
 
 CREATE TABLE IF NOT EXISTS preferences (
-    id PRIMARY KEY AUTOINCREMENT,
-    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id INT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     units TEXT NOT NULL CHECK (units IN ('us', 'si')) DEFAULT 'us',
     temperature_min REAL DEFAULT 23.9, -- Minimum temperature in Celsius (~75°F)
     temperature_max REAL DEFAULT 38.0, -- Maximum temperature in Celsius (~100°F)
@@ -14,6 +15,7 @@ CREATE TABLE IF NOT EXISTS preferences (
     wind_max INT DEFAULT 4, -- beaufort scale maximum
     precipitation_min REAL DEFAULT 0.0, -- Minimum precipitation prob
     precipitation_max REAL DEFAULT 10.0, -- Maximum precipitation prob
+    locale TEXT NOT NULL DEFAULT 'en-US', -- Default locale
 );
 
 CREATE TABLE IF NOT EXISTS likes (
